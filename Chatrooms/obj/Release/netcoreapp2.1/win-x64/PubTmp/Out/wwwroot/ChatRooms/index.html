@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Chatrooms</title>
+        <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+        <script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+        <script src="../js/signalr/dist/browser/signalr.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+        <style>
+            html, body {
+                height: 100%;
+                background-color: azure;
+            }
+        </style>
+    </head>
+    <body>
+        <nav id="nav" class="navbar navbar-default navbar-fixed-top" style="background-color: paleturquoise;">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Chatrooms</a>
+                <a class="navbar-toggle" style="background-color: burlywood;" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar" style="background-color: whitesmoke;"></span>
+                    <span class="icon-bar" style="background-color: whitesmoke;"></span>
+                    <span class="icon-bar" style="background-color: whitesmoke;"></span>
+                </a>
+            </div>
+            <div class="collapse navbar-collapse navbar-right">
+                <ul class="nav navbar-nav">
+                    <li class="bg-success"><a id="NickName" name="NickName" href="#">当前昵称：</a></li>
+                    <li class="bg-warning"><a id="ReNick" name="ReNick" href="#">自定义昵称</a></li>
+                    <li class="bg-danger"><a id="Exit" name="Exit" href="#">退出</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="modal fade" id="SetNickBox" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header btn-success">
+                        <h4 class="modal-title">自定义昵称</h4>
+                    </div>
+                    <div class="modal-body">
+                        若使用默认的随机昵称请点击忽略
+                        <input class="form-control" type="text" name="nicktext" id="nicktext" placeholder="昵称（不超过20字）" />
+                    </div>
+                    <div class="modal-footer">
+                        <label id="NickTip" style="color: red;"></label>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">忽略</button>
+                        <button id="SetNickBtn" name="SetNickBtn" type="button" class="btn btn-success">提交设置</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="tipbox" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header btn-danger">
+                        <h4 class="modal-title">系统提示</h4>
+                    </div>
+                    <div class="modal-body text-center" id="tipmsg"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container" style="height: 100%;padding-top: 50px;">
+            <div id="msg" name="msg" class="row" style="height: 85%;padding: 10px;border: solid;border-spacing: 5px;border-width: 3px;border-color: lightseagreen;overflow-y: scroll;background-color: rgba(100,200,200,0.1);">
+            </div>
+            <div class="row" style="height: 15%;border: solid;border-width: 3px;border-color: dodgerblue;">
+                <div class="input-group" style="height: 100%;width: 100%;">
+                    <textarea id="sndtext" name="sndtext" class="form-control custom-control" style="height: 100%;resize: none;padding: 0px;"></textarea>
+                    <span id="send" name="send" class="input-group-addon btn btn-primary" type="button" style="height: 100%;">发送！</span>
+                </div>
+            </div>
+        </div>
+        <script>
+            var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+
+            connection.on("SetNickErr", function (Data) {
+                $('#NickTip').text(Data);
+            });
+            connection.on("SetNickOK", function (Data) {
+                $('#SetNickBox').modal('hide');
+                $('#NickName').text('当前昵称：' + Data);
+            });
+            connection.on("SetNickDefault", function (Data) {
+                $('#NickName').text('当前昵称：' + Data);
+            });
+            connection.on("RoomMsg", function (NickName, Data) {
+                $('#msg').append($("<div></div>").text(NickName + '：'),
+                    $("<div style='white-space: pre-wrap;border-bottom-right-radius: 20px;padding: 10px;background-color: rgba(0, 200, 0, 0.5);box-shadow: 2px 3px 3px gray;margin-bottom: 10px;word-break: break-all;display:inline-block;'></div>").text(Data));
+                $('#msg').scrollTop($('#msg').prop("scrollHeight"));
+            });
+            connection.on("RoomSysMsg", function (Data) {
+                $('#msg').append($("<p class='text-center' style='border-radius: 15px;padding: 5px;background-color: rgba(10, 10, 10, 0.1);margin-bottom: 10px;'>123</p>").text(Data));
+                $('#msg').scrollTop($('#msg').prop("scrollHeight"));
+            });
+            connection.start().then(function () {
+            }).catch(function (err) {
+                ShowTipBox("与服务器的连接失效</br>请刷新页面尝试重新连接！");
+            });
+            // 显示系统提示
+            function ShowTipBox(TipStr) {
+                $('#tipmsg').html(TipStr);
+                $('#tipbox').modal('show');
+            }
+            // 发送聊天消息
+            function SendChatMsg(Message) {
+                connection.invoke("RoomMsg", Message);
+            }
+            // 设置昵称
+            function SetNickName(NewNick) {
+                connection.invoke("SetNickName", NewNick);
+            }
+            $('#ReNick').bind('click', function () {
+                $('#SetNickBox').modal('show');
+            });
+            $('#SetNickBtn').bind('click', function () {
+                SetNickName($('#nicktext').val());
+            });
+            $('#send').bind('click', function () {
+                SendChatMsg($('#sndtext').val());
+                $('#sndtext').val('');
+            });
+            $('#Exit').bind('click', function () {
+                location.reload();
+            });
+            $(document).keydown(function (event) {
+                if (event.ctrlKey && event.keyCode == 13) {
+                    SendChatMsg($('#sndtext').val());
+                    $('#sndtext').val('');
+                }
+            });
+        </script>
+    </body>
+</html>

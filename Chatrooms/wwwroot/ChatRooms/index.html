@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Chatrooms</title>
+        <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdn.bootcss.com/twitter-bootstrap/3.3.0/js/bootstrap.min.js"></script>
+        <script src="../js/signalr/dist/browser/signalr.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="https://cdn.bootcss.com/twitter-bootstrap/3.3.0/css/bootstrap.min.css">
+        <style>
+            html, body {
+                height: 100%;
+                background-color: azure;
+            }
+        </style>
+    </head>
+    <body>
+        <nav id="nav" class="navbar navbar-default navbar-fixed-top" style="background-color: paleturquoise;">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">ChatRooms</a>
+                <a class="navbar-toggle" style="background-color: burlywood;" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar" style="background-color: whitesmoke;"></span>
+                    <span class="icon-bar" style="background-color: whitesmoke;"></span>
+                    <span class="icon-bar" style="background-color: whitesmoke;"></span>
+                </a>
+            </div>
+            <div id="menu" class="collapse navbar-collapse navbar-right">
+                <ul class="nav navbar-nav" onclick="$('#menu').collapse('hide');">
+                    <li class="bg-success"><a id="NickName" name="NickName" href="#">当前昵称：</a></li>
+                    <li class="bg-warning"><a id="ReNick" name="ReNick" href="#">自定义昵称</a></li>
+                    <li class="bg-danger"><a id="Exit" name="Exit" href="#">退出</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="modal fade" id="SetNickBox" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header btn-success">
+                        <h4 class="modal-title">自定义昵称</h4>
+                    </div>
+                    <div class="modal-body">
+                        若使用默认的随机昵称请点击忽略
+                        <input class="form-control" type="text" name="nicktext" id="nicktext" placeholder="昵称（不超过20字）" />
+                    </div>
+                    <div class="modal-footer">
+                        <label id="NickTip" style="color: red;"></label>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">忽略</button>
+                        <button id="SetNickBtn" name="SetNickBtn" type="button" class="btn btn-success">提交设置</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="CreateRoomBox" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header btn-success">
+                        <h4 class="modal-title">房间属性</h4>
+                    </div>
+                    <div class="modal-body">
+                        房间标题（不超过30字）
+                        <input class="form-control" type="text" name="roomtitle" id="roomtitle" placeholder="" />
+                        房间密码（不超过20字）
+                        <input class="form-control" type="text" name="roompwd" id="roompwd" placeholder="" />
+                    </div>
+                    <div class="modal-footer">
+                        <label id="RoomCfgTip" style="color: red;"></label>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                        <button id="CreateRoomBtn" name="CreateRoomBtn" type="button" class="btn btn-success">创建房间</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="VerifyBox" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h4 class="modal-title">加入验证</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="TargetRID" />
+                        房间密码
+                        <input class="form-control" type="text" name="checkpwd" id="checkpwd" placeholder="" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                        <button id="verify" name="verify" type="button" class="btn btn-success">验证</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="tipbox" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header btn-danger">
+                        <h4 class="modal-title">系统提示</h4>
+                    </div>
+                    <div class="modal-body text-center" id="tipmsg"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="roomlist" class="container" style="padding-top: 55px;">
+            <div id="CreateRoomApply" class="btn btn-success btn-block">创建房间</div>
+            <table class="table" style="word-break: break-all;word-wrap: break-word;">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>房间人数</th>
+                        <th>是否加密</th>
+                    </tr>
+                </thead>
+                <tbody id="listcontent"></tbody>
+            </table>
+        </div>
+        <div id="chatbox" class="container" style="height: 100%;padding-top: 50px;" hidden>
+            <div id="roombanner" name="roombanner" class="row" style="height: 10%;border: solid;border-width: 3px;border-color: dodgerblue;background-color: deepskyblue;">
+                <div id="title" name="title" class="col-xs-8" style="height: 100%;align-items: center;display: flex;cursor: default;">Title Here</div>
+                <div id="usercount" class="col-xs-2 bg-success" style="height: 100%;align-items: center;justify-content: center;display: flex;cursor: default;">人</div>
+                <div id="QuitRoom" class="col-xs-2 bg-danger" style="height: 100%;align-items: center;justify-content: center;display: flex;cursor: pointer;">离开</div>
+            </div>
+            <div id="msg" name="msg" class="row" style="height: 75%;padding: 10px;border: solid;border-spacing: 5px;border-width: 3px;border-color: lightseagreen;overflow-y: scroll;background-color: rgba(100,200,200,0.1);">
+            </div>
+            <div class="row" style="height: 15%;border: solid;border-width: 3px;border-color: dodgerblue;">
+                <div class="input-group" style="height: 100%;width: 100%;">
+                    <textarea id="sndtext" name="sndtext" placeholder="Ctrl+Enter 发送" class="form-control custom-control" style="height: 100%;resize: none;padding: 0px;"></textarea>
+                    <span id="send" name="send" class="input-group-addon btn btn-primary" type="button" style="height: 100%;">发送！</span>
+                </div>
+            </div>
+        </div>
+        <script>
+            var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+            connection.on("SetNickErr", function (Data) {
+                $('#NickTip').text(Data);
+            });
+            connection.on("CreateRoomErr", function (Data) {
+                $('#RoomCfgTip').text(Data);
+            });
+            connection.on("SetNickOK", function (Data) {
+                $('#SetNickBox').modal('hide');
+                $('#NickName').text('当前昵称：' + Data);
+            });
+            connection.on("CreateRoomOK", function () {
+                $('#CreateRoomBox').modal('hide');
+                $('#roomlist').hide();
+                $('#chatbox').show();
+            });
+            connection.on("RoomInfo", function (Title, Count) {
+                $('#roomlist').hide();
+                $('#VerifyBox').modal('hide');
+                $('#chatbox').show();
+                $('#title').text(Title);
+                $('#usercount').text(Count + "人");
+            });
+            connection.on("RoomList", function (Data) {
+                $('#listcontent').html('');
+                for (var i = 0; i < Data.length; i++) {
+                    $('#listcontent').append($("<tr id='" + Data[i].id + "' class='room success " + (Data[i].isLocked === true ? "locked" : "") + "' style='cursor: pointer;'></tr>")
+                        .append($("<td></td>").text(Data[i].roomTitle))
+                            .append($("<td></td>").text(Data[i].userCount))
+                                .append($("<td></td>").text((Data[i].isLocked === true ? "是" : "否"))));
+                }
+                $('.room').click(function () {
+                    if ($(this).attr('class').indexOf("locked") === -1) {
+                        JoinRoom($(this).attr('id'), "");
+                    }
+                    else {
+                        $('#TargetRID').val($(this).attr('id'));
+                        $('#VerifyBox').modal('show');
+                    }
+                });
+            });
+            connection.on("SetNickDefault", function (Data) {
+                $('#NickName').text('当前昵称：' + Data);
+            });
+            connection.on("RoomMsg", function (NickName, Data) {
+                if (NickName === $('#NickName').text().substring(5)) {
+                    $('#msg').append($("<div style='color: blue;font-weight: 600;'></div>").text(NickName + '(我)：'));
+                }
+                else {
+                    $('#msg').append($("<div></div>").text(NickName + '：'));
+                }
+                $('#msg').append($("<div style='white-space: pre-wrap;border-bottom-right-radius: 20px;padding: 10px;background-color: rgba(0, 200, 0, 0.5);box-shadow: 2px 3px 3px gray;margin-bottom: 10px;word-break: break-all;display:inline-block;'></div>").text(Data));
+                $('#msg').scrollTop($('#msg').prop("scrollHeight"));
+            });
+            connection.on("RoomSysMsg", function (Data) {
+                $('#msg').append($("<p class='text-center' style='border-radius: 15px;padding: 5px;background-color: rgba(10, 10, 10, 0.1);margin-bottom: 10px;'>123</p>").text(Data));
+                $('#msg').scrollTop($('#msg').prop("scrollHeight"));
+            });
+            connection.on("SysMsg", function (Data) {
+                ShowTipBox(Data);
+            });
+            connection.start().then(function () {
+            }).catch(function (err) {
+                ShowTipBox("与服务器的连接失效</br>请刷新页面尝试重新连接！");
+            });
+            // 显示系统提示
+            function ShowTipBox(TipStr) {
+                $('#tipmsg').html(TipStr);
+                $('#tipbox').modal('show');
+            }
+            // 发送聊天消息
+            function SendChatMsg(Message) {
+                connection.invoke("RoomMsg", Message);
+            }
+            // 设置昵称
+            function SetNickName(NewNick) {
+                connection.invoke("SetNickName", NewNick);
+            }
+            // 创建房间
+            function CreateRoom(Title, Pwd) {
+                connection.invoke("CreateRoom", Title, Pwd);
+            }
+            // 退出房间
+            function QuitRoom() {
+                $('#msg').text('');
+                connection.invoke("QuitRoom");
+                $('#roomlist').show();
+                $('#chatbox').hide();
+            }
+            // 加入房间
+            function JoinRoom(ID, Pwd) {
+                connection.invoke("JoinRoom", ID, Pwd);
+            }
+
+            $('#ReNick').bind('click', function () {
+                $('#SetNickBox').modal('show');
+            });
+            $('#SetNickBtn').bind('click', function () {
+                SetNickName($('#nicktext').val());
+            });
+            $('#send').bind('click', function () {
+                SendChatMsg($('#sndtext').val());
+                $('#sndtext').val('');
+            });
+            $('#Exit').bind('click', function () {
+                location.href = 'about:blank';
+            });
+            $('#CreateRoomBtn').bind('click', function () {
+                CreateRoom($('#roomtitle').val(), $('#roompwd').val());
+            });
+            $('#QuitRoom').bind('click', function () {
+                QuitRoom();
+            });
+            $('#CreateRoomApply').bind('click', function () {
+                $('#CreateRoomBox').modal('show');
+            });
+            $('#verify').bind('click', function () {
+                JoinRoom($('#TargetRID').val(), $('#checkpwd').val());
+            });
+
+            $(document).keydown(function (event) {
+                if (event.ctrlKey && event.keyCode == 13) {
+                    SendChatMsg($('#sndtext').val());
+                    $('#sndtext').val('');
+                }
+            });
+        </script>
+    </body>
+</html>

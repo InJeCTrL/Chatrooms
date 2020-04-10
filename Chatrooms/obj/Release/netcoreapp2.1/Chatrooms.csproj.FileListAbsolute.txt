@@ -1,0 +1,14 @@
+D:\Code Trunk\Chatrooms\Chatrooms\bin\Release\netcoreapp2.1\Chatrooms.deps.json
+D:\Code Trunk\Chatrooms\Chatrooms\bin\Release\netcoreapp2.1\Chatrooms.runtimeconfig.json
+D:\Code Trunk\Chatrooms\Chatrooms\bin\Release\netcoreapp2.1\Chatrooms.runtimeconfig.dev.json
+D:\Code Trunk\Chatrooms\Chatrooms\bin\Release\netcoreapp2.1\Chatrooms.dll
+D:\Code Trunk\Chatrooms\Chatrooms\bin\Release\netcoreapp2.1\Chatrooms.pdb
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.csprojAssemblyReference.cache
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.csproj.CoreCompileInputs.cache
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.RazorAssemblyInfo.cache
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.RazorAssemblyInfo.cs
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.AssemblyInfoInputs.cache
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.AssemblyInfo.cs
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.RazorTargetAssemblyInfo.cache
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.dll
+D:\Code Trunk\Chatrooms\Chatrooms\obj\Release\netcoreapp2.1\Chatrooms.pdb
